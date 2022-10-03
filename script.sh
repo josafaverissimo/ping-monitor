@@ -39,12 +39,12 @@ function doPing() {
 		
 		if [ ! -z "$ms" ]; then
 			$((++icmp_seq)) 2> /dev/null
-			ms_sum=`python -c "print(round($ms + $ms_sum, 2))"`
-			ms_avg=`python -c "print(round($ms_sum/$icmp_seq, 2))"`
+			ms_sum=`python -c "print('{:.2f}'.format($ms + $ms_sum))"`
+			ms_avg=`python -c "print('{:.2f}'.format($ms_sum/$icmp_seq, 2))"`
 		fi
 		
 		tput cup 0 20
-		echo "$ms_avg" "ms"
+		echo "$ms_avg""ms"
 	done
 }
 
