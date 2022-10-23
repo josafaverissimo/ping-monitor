@@ -8,8 +8,18 @@
 # A command line monitor to view average ms from domains
 # 
 # Example:
-#	> ./ping_monitor
-#		The script will monitorate domain that is hardcoded
+#	> ./ping_monitor www.github.com www.google.com
+#		The script will monitorate hosts in paramaters
+#		if you create a file hosts.txt in the same dir,
+#		the script will monitorate hosts in file too
+#
+#	> ./ping_monitor --no-sleep
+#		The script will be execute with no sleep
+#
+#	> ./ping_monitor --no-sleep www.github www.google.com
+#		no sleep with hosts options. The position of
+#		"--no-sleep" doesn't matter
+#
 # --------------------------------------------------------
 # Bash version: 5.1.16
 #
