@@ -32,6 +32,21 @@ NO_SLEEP_FLAG=0
 
 # Functions ----------------------------------------------
 
+function help_menu() {
+	tput clear
+	tput cup 0 0
+	echo -e "
+		$(basename $0)
+
+		>OPTIONS
+		-h 		   ~ Help menu
+		--no-sleep ~ Monitorate without delay
+
+		>Domains
+		just type a host or multiple hosts. E.g.: $0 www.github.com www.google.com
+	"
+}
+
 function getWordsAndNumbers() {
 	string=$1
 
@@ -52,7 +67,7 @@ function doPing() {
 	urls=$*
 	input=""
 	stop_flag="q"
-	lines=$(tput lines)
+	quit_message="> q to quit"
 
 	declare -A ping_pids_array
 	declare -A icmp_seq_array
@@ -94,7 +109,7 @@ function doPing() {
 					"print('{:.2f}'.format($ms + $ms_sum))")
 				ms_avg_array["$file_ping_data"]=$(python3 -c\
 					"print('{:.2f}'.format($ms_sum/$icmp_seq, 2))")
- 
+
 				tput cup ${tput_line_position_array["$file_ping_data"]} 0
 				echo "$url" ${ms_avg_array["$file_ping_data"]}"ms"
 			done
@@ -104,9 +119,12 @@ function doPing() {
 	done &
 	while_pid=$!
 
+	tput cup $(tput lines) $(($(tput cols) - ${#quit_message}))
+	echo $quit_message
+
 	while :; do
-		tput cup $(tput lines - 1)
-		read -p "~press q to quit" -n 1 input
+		read -n 1 -s input
+		
 
 		if [[ "$input" = "$stop_flag" ]]; then
 			killProccess $while_pid ${ping_pids_array[@]}
@@ -131,6 +149,7 @@ if [[ -n "$*" ]]; then
 	if [[ -n "$URLS" ]]; then
 		for url in $*; do
 			case $url in
+				-h) help_menu && exit 0;;
 				--no-sleep) NO_SLEEP_FLAG=1 && continue;;
 			esac
 
