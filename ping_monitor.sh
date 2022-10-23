@@ -17,10 +17,10 @@
 #
 # Functions ----------------------------------------------
 
-function getWords() {
+function getWordsAndNumbers() {
 	string=$1
 
-	grep -o [a-zA-Z] <<< "$url" | tr -d "\n"
+	grep -o [a-zA-Z0-9] <<< "$url" | tr -d "\n"
 }
 
 function killProccess() {
@@ -45,7 +45,7 @@ function doPing() {
 	line_counter=0
 
 	for url in $urls; do
-		file_ping_data=$(getWords "$url")
+		file_ping_data=$(getWordsAndNumbers "$url")
 
 		icmp_seq_array["$file_ping_data"]=1
 		ms_sum_array["$file_ping_data"]=0
@@ -61,7 +61,7 @@ function doPing() {
 	while :; do
 		for url in $urls; do
 			ms=""
-			file_ping_data=$(getWords "$url")	
+			file_ping_data=$(getWordsAndNumbers "$url")	
 			icmp_seq=${icmp_seq_array["$file_ping_data"]}
 			ms_sum=${ms_sum_array["$file_ping_data"]}
 
@@ -70,8 +70,8 @@ function doPing() {
 
 				ms=$(grep seq=$icmp_seq ./.temp_$file_ping_data \
 					| head -n 1 \
-					| cut -d ' ' -f 8 \
-					| cut -d '=' -f 2)
+					| cut -d '=' -f 4 \
+					| cut -d ' ' -f 1)
 
 				ms_sum_array["$file_ping_data"]=$(python3 -c\
 					"print('{:.2f}'.format($ms + $ms_sum))")
@@ -95,7 +95,7 @@ function doPing() {
 			killProccess $while_pid ${ping_pids_array[@]}
 
 			for url in $urls; do
-				file_ping_data=$(getWords "$url")
+				file_ping_data=$(getWordsAndNumbers "$url")
 
 				rm -rf "./.temp_$file_ping_data"
 			done
@@ -112,7 +112,7 @@ function doPing() {
 tput clear
 tput civis
 
-doPing www.microsoft.com www.google.com.br www.instagram.com.br www.facebook.com
+doPing www.microsoft.com www.google.com www.instagram.com.br www.facebook.com 1.1.1.1 8.8.4.4
 
 tput clear
 tput cnorm
