@@ -15,12 +15,17 @@
 #
 # --------------------------------------------------------
 #
+# Variables ----------------------------------------------
+
+URLS=""
+NO_SLEEP_FLAG=0
+
 # Functions ----------------------------------------------
 
 function getWordsAndNumbers() {
 	string=$1
 
-	grep -o [a-zA-Z0-9] <<< "$url" | tr -d "\n"
+	grep -o [a-zA-Z0-9] <<< "$string" | tr -d "\n"
 }
 
 function killProccess() {
@@ -32,6 +37,8 @@ function killProccess() {
 }
 
 function doPing() {
+	[[ -z "$*" ]] && exit 0	
+
 	urls=$*
 	input=""
 	stop_flag="q"
@@ -66,7 +73,7 @@ function doPing() {
 			ms_sum=${ms_sum_array["$file_ping_data"]}
 
 			while [[ -z "$ms" ]]; do
-				sleep 1
+				[[ $NO_SLEEP_FLAG -eq 0 ]] && sleep 1
 
 				ms=$(grep seq=$icmp_seq ./.temp_$file_ping_data \
 					| head -n 1 \
@@ -109,10 +116,27 @@ function doPing() {
 #
 # Execution ----------------------------------------------
 
+[[ -f "./hosts.txt" ]] && URLS=$(cat hosts.txt | tr "\n" " ")
+if [[ -n "$*" ]]; then
+	if [[ -n "$URLS" ]]; then
+		for url in $*; do
+			case $url in
+				--no-sleep) NO_SLEEP_FLAG=1 && continue;;
+			esac
+
+			isnt_in_urls=$(echo $URLS | grep -w $url)
+
+			[[ -z "$isnt_in_urls" ]] && URLS="$URLS $url"
+		done
+	else
+		URLS="$*"
+	fi
+fi
+
 tput clear
 tput civis
 
-doPing www.microsoft.com www.google.com www.instagram.com.br www.facebook.com 1.1.1.1 8.8.4.4
+doPing $URLS
 
 tput clear
 tput cnorm
