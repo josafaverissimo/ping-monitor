@@ -229,24 +229,24 @@ function hosts_manager() {
 		option=$(main_menu)
 		
 		# exit menu?
-		[[ $? -ne 0 ]] && exit CANCELED_BY_USER_EXIT_CODE
+		[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
 
 		case $option in
 			1)
 				create_host
-				[[ $? -ne 0 ]] && exit CANCELED_BY_USER_EXIT_CODE
+				[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
 			;;
 			2)
 				read_hosts
-				[[ $? -ne 0 ]] && exit CANCELED_BY_USER_EXIT_CODE
+				[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
 			;;
 			3)
 				update_host
-				[[ $? -ne 0 ]] && exit CANCELED_BY_USER_EXIT_CODE
+				[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
 			;;
 			4)
 				delete_host
-				[[ $? -ne 0 ]] && exit CANCELED_BY_USER_EXIT_CODE
+				[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
 			;;
 		esac
 	done
@@ -261,6 +261,7 @@ function help_menu() {
 
 		>OPTIONS
 		-h ~ Help menu
+		-mg ~ manage hosts
 		--no-sleep ~ Monitorate without delay
 
 		>Domains
@@ -381,6 +382,7 @@ if [[ -n "$*" ]]; then
 		if [[ $isnt_option -eq 0 ]]; then
 			case $url in
 				-h) help_menu && exit $SUCCESS_EXIT_CODE;;
+				-mg) hosts_manager && exit $SUCCESS_EXITCODE;;
 				--no-sleep) NO_SLEEP_FLAG=1 && continue;;
 				*) continue;;
 			esac
@@ -395,10 +397,8 @@ fi
 tput clear
 tput civis
 
-# doPing $URLS
+doPing $URLS
 
 tput clear
 tput cnorm
-
-hosts_manager
 # --------------------------------------------------------
