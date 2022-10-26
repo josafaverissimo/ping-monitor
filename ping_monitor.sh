@@ -46,13 +46,18 @@ function dialog_box() {
 	[[ -z "$*" ]] && exit $UNDEFINED_EXIT_CODE
 	
 	local title="Box"
+
 	local is_input=0
 	local input_message="Type a text"
+	local input_value=""
+
 	local is_textbox=0
 	local textbox_data=""
+
 	local is_menu=0
 	local menu_message="choose a option:"
 	local menu_options=""
+
 	local is_msgbox=0
 	local msgbox_text="hello"
 
@@ -75,6 +80,12 @@ function dialog_box() {
 		egrep -q "^input_message.*$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			input_message=$(sed -r 's/input_message=//' <<< "$parameter")
+		fi
+
+		# there's a input value?
+		egrep -q "^input_value.*$" <<< "$parameter"
+		if [[ $? -eq 0 ]]; then
+			input_value=$(sed -r 's/input_value=//' <<< "$parameter")
 		fi
 
 		# is a textbox?
@@ -123,7 +134,7 @@ function dialog_box() {
 	done
 
 	if [[ $is_input -eq 1 ]]; then
-		dialog --title "$title" --stdout --inputbox "$input_message" 0 0
+		dialog --title "$title" --stdout --inputbox "$input_message" 0 0 "$input_value"
 
 		return $?
 	fi
@@ -201,7 +212,7 @@ function hosts_manager() {
 		hostToUpdate=$(dialog_box title="$box_title" menu menu_options="$menu_options")
 		[[ $? -ne 0 ]] && return $?
 
-		newHost=$(dialog_box title="Update $hostToUpdate" input input_message="")
+		newHost=$(dialog_box title="Update $hostToUpdate" input input_message="" input_value="$hostToUpdate")
 		[[ $? -ne 0 ]] && return $?
 
 		sed -i "s/$hostToUpdate/$newHost/g" $HOSTS_FILE
@@ -229,24 +240,24 @@ function hosts_manager() {
 		option=$(main_menu)
 		
 		# exit menu?
-		[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
+		[[ $? -ne 0 ]] && return $CANCELED_BY_USER_EXIT_CODE
 
 		case $option in
 			1)
 				create_host
-				[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
+				[[ $? -ne 0 ]] && return $CANCELED_BY_USER_EXIT_CODE
 			;;
 			2)
 				read_hosts
-				[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
+				[[ $? -ne 0 ]] && return $CANCELED_BY_USER_EXIT_CODE
 			;;
 			3)
 				update_host
-				[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
+				[[ $? -ne 0 ]] && return $CANCELED_BY_USER_EXIT_CODE
 			;;
 			4)
 				delete_host
-				[[ $? -ne 0 ]] && exit $CANCELED_BY_USER_EXIT_CODE
+				[[ $? -ne 0 ]] && return $CANCELED_BY_USER_EXIT_CODE
 			;;
 		esac
 	done
@@ -328,10 +339,7 @@ function doPing() {
 			while [[ -z "$ms" ]]; do
 				[[ $NO_SLEEP_FLAG -eq 0 ]] && sleep 1
 
-				ms=$(grep seq=$icmp_seq ./.temp_$file_ping_data \
-					| head -n 1 \
-					| cut -d '=' -f 4 \
-					| cut -d ' ' -f 1)
+				ms=$(egrep "^.*seq=$icmp_seq" ./.temp_$file_ping_data | sed -r 's/^.*time=|ms| +//g')
 
 				ms_sum_array["$file_ping_data"]=$(python3 -c\
 					"print('{:.2f}'.format($ms + $ms_sum))")
@@ -368,6 +376,32 @@ function doPing() {
 	
 }
 
+function screen() {
+	local quit=0
+	local option=
+	local menu_options="$(cat <<- EOF
+	1 "Start ping"
+	2 "Manage hosts"
+	EOF
+	)"
+
+	while :; do
+		option=$(dialog_box title="$box_title" menu menu_options="$menu_options")
+		quit=$?
+
+		[[ $quit -ne 0 ]] && return $quit
+
+		case $option in
+			1)
+				tput clear
+				doPing $URLS
+				tput clear
+			;;
+			2) hosts_manager;;
+		esac
+	done
+}
+
 # --------------------------------------------------------
 #
 # Execution ----------------------------------------------
@@ -397,7 +431,7 @@ fi
 tput clear
 tput civis
 
-doPing $URLS
+screen
 
 tput clear
 tput cnorm
