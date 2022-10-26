@@ -65,67 +65,67 @@ function dialog_box() {
 		parameter=$1
 
 		# is the title?
-		egrep -q "^title.*$" <<< "$parameter"		
+		grep -E -q "^title.*$" <<< "$parameter"		
 		if [[ $? -eq 0 ]]; then
 			title=$(sed -r 's/title=//' <<< "$parameter")
 		fi
 
 		# is a inputbox?
-		egrep -q "^input$" <<< "$parameter"
+		grep -E -q "^input$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			is_input=1
 		fi
 
 		# there's a input message?
-		egrep -q "^input_message.*$" <<< "$parameter"
+		grep -E -q "^input_message.*$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			input_message=$(sed -r 's/input_message=//' <<< "$parameter")
 		fi
 
 		# there's a input value?
-		egrep -q "^input_value.*$" <<< "$parameter"
+		grep -E -q "^input_value.*$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			input_value=$(sed -r 's/input_value=//' <<< "$parameter")
 		fi
 
 		# is a textbox?
-		egrep -q "^textbox$" <<< "$parameter"
+		grep -E -q "^textbox$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			is_textbox=1
 		fi
 
 		# there's a textbox data?
-		egrep -q "^textbox_data.*$" <<< "$parameter"
+		grep -E -q "^textbox_data.*$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			textbox_data=$(sed -r 's/textbox_data=//' <<< "$parameter")
 		fi
 
 		# is a menu?
-		egrep -q "^menu$" <<< "$parameter"
+		grep -E -q "^menu$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			is_menu=1
 		fi
 
 		# there's a menu message?
-		egrep -q "^menu_message.*$" <<< "$parameter"
+		grep -E -q "^menu_message.*$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			menu_message=$(sed -r 's/menu_message=//' <<< "$parameter")
 		fi
 
 		# there's a menu options?
-		egrep -q "^menu_options.*$" <<< "$parameter"
+		grep -E -q "^menu_options.*$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			menu_options=$(sed -r 's/menu_options=//' <<< "$parameter")
 		fi
 
 		# is a message box?
-		egrep -q "^msgbox$" <<< "$parameter"
+		grep -E -q "^msgbox$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			is_msgbox=1
 		fi
 
 		# there's a message box text?
-		egrep -q "^msgbox_text.*$" <<< "$parameter"
+		grep -E -q "^msgbox_text.*$" <<< "$parameter"
 		if [[ $? -eq 0 ]]; then
 			msgbox_text=$(sed -r 's/msgbox_text=//' <<< "$parameter")
 		fi
@@ -196,7 +196,7 @@ function hosts_manager() {
 
 	function read_hosts() {		
 		local box_title="Show hosts"
-		egrep "^[a-zA-Z0-9]" "$HOSTS_FILE" > "$TEMP_FILE"
+		grep -E "^[a-zA-Z0-9]" "$HOSTS_FILE" > "$TEMP_FILE"
 
 		
 		dialog_box title="$box_title" textbox textbox_data="$TEMP_FILE"
@@ -207,7 +207,7 @@ function hosts_manager() {
 	function update_host() {
 		local box_title="Update host"
 		local menu_message="Choose a host to update:"
-		local menu_options="$(egrep "^[a-zA-Z0-9]" $HOSTS_FILE | sed -r 's/^|$/"/g;s/$/ \//')"
+		local menu_options="$(grep -E "^[a-zA-Z0-9]" $HOSTS_FILE | sed -r 's/^|$/"/g;s/$/ \//')"
 
 		hostToUpdate=$(dialog_box title="$box_title" menu menu_options="$menu_options")
 		[[ $? -ne 0 ]] && return $?
@@ -223,12 +223,12 @@ function hosts_manager() {
 	function delete_host() {
 		local box_title="Delete host"
 		local menu_message="Choose a host to delete:"
-		local menu_options="$(egrep "^[a-zA-Z0-9]" $HOSTS_FILE | sed -r 's/^|$/"/g;s/$/ \//')"
+		local menu_options="$(grep -E "^[a-zA-Z0-9]" $HOSTS_FILE | sed -r 's/^|$/"/g;s/$/ \//')"
 
 		hostToDelete=$(dialog_box title="$box_title" menu menu_options="$menu_options")
 		[[ $? -ne 0 ]] && return $?
 
-		egrep -v "^$hostToDelete$" $HOSTS_FILE > "$TEMP_FILE"
+		grep -E -v "^$hostToDelete$" $HOSTS_FILE > "$TEMP_FILE"
 
 		mv "$TEMP_FILE" "$HOSTS_FILE"
 
@@ -339,7 +339,7 @@ function doPing() {
 			while [[ -z "$ms" ]]; do
 				[[ $NO_SLEEP_FLAG -eq 0 ]] && sleep 1
 
-				ms=$(egrep "^.*seq=$icmp_seq" ./.temp_$file_ping_data | sed -r 's/^.*time=|ms| +//g')
+				ms=$(grep -E "^.*seq=$icmp_seq" ./.temp_$file_ping_data | sed -r 's/^.*time=|ms| +//g')
 
 				ms_sum_array["$file_ping_data"]=$(python3 -c\
 					"print('{:.2f}'.format($ms + $ms_sum))")
@@ -410,7 +410,7 @@ function screen() {
 
 if [[ -n "$*" ]]; then
 	for url in $*; do
-		egrep -q "^.*\-" <<< $url
+		grep -E -q "^.*\-" <<< $url
 		isnt_option=$?
 
 		if [[ $isnt_option -eq 0 ]]; then
