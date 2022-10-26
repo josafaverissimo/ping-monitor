@@ -32,6 +32,8 @@ NO_URLS_EXIT_CODE=100
 CANCELED_BY_USER_EXIT_CODE=200
 SUCCESS_EXIT_CODE=0
 
+# --------------------------------------------------------
+#
 # Variables ----------------------------------------------
 
 URLS=""
@@ -330,25 +332,39 @@ function doPing() {
 	done
 
 	while :; do
-		for url in $urls; do
+		[[ $NO_SLEEP_FLAG -eq 0 ]] && sleep 1
+		for url in $urls; do 
 			ms=""
+			message=""
 			file_ping_data=$(getWordsAndNumbers "$url")	
 			icmp_seq=${icmp_seq_array["$file_ping_data"]}
 			ms_sum=${ms_sum_array["$file_ping_data"]}
 
-			while [[ -z "$ms" ]]; do
-				[[ $NO_SLEEP_FLAG -eq 0 ]] && sleep 1
+			grep -E "^.*seq=$icmp_seq" "./.temp_$file_ping_data" | grep -q "time"
+			there_isnt_time=$?
 
-				ms=$(grep -E "^.*seq=$icmp_seq" ./.temp_$file_ping_data | sed -r 's/^.*time=|ms| +//g')
+			[[ $there_isnt_time -eq 0 ]] && ms=$(grep -E \
+			"^.*seq=$icmp_seq" ./.temp_$file_ping_data \
+			| sed -r 's/^.*time=|ms| +//g')
 
-				ms_sum_array["$file_ping_data"]=$(python3 -c\
-					"print('{:.2f}'.format($ms + $ms_sum))")
-				ms_avg_array["$file_ping_data"]=$(python3 -c\
-					"print('{:.2f}'.format($ms_sum/$icmp_seq, 2))")
+			[[ -z "$ms" ]] && ms=0
 
-				tput cup ${tput_line_position_array["$file_ping_data"]} 0
-				echo "$url" ${ms_avg_array["$file_ping_data"]}"ms"
-			done
+			ms_sum_array["$file_ping_data"]=$(python3 -c\
+				"print('{:.2f}'.format($ms + $ms_sum))")
+			ms_avg_array["$file_ping_data"]=$(python3 -c\
+				"print('{:.2f}'.format($ms_sum/$icmp_seq, 2))")
+
+	
+			message="$url ${ms_avg_array["$file_ping_data"]}ms"			
+			[[ "$ms" = "0" ]] && message="$url ..."
+			
+			# Clean line
+			tput cup ${tput_line_position_array["$file_ping_data"]} 0
+			echo "$url                                                     "
+
+			# Show message
+			tput cup ${tput_line_position_array["$file_ping_data"]} 0
+			echo "$message"
 
 			((icmp_seq_array["$file_ping_data"]++))
 		done
@@ -408,6 +424,7 @@ function screen() {
 
 [[ -f "./$HOSTS_FILE" ]] && URLS=$(cat $HOSTS_FILE | tr "\n" " ")
 
+# Isnt parameters empty?
 if [[ -n "$*" ]]; then
 	for url in $*; do
 		grep -E -q "^.*\-" <<< $url
@@ -422,9 +439,9 @@ if [[ -n "$*" ]]; then
 			esac
 		fi
 
-		isnt_in_urls=$(echo $URLS | grep -w $url)
-
-		[[ -z "$isnt_in_urls" ]] && URLS="$URLS $url"
+		# There's not in urls?
+		grep -q "$url" <<< $URLS
+		[[ $? -ne 0 ]] && URLS="$URLS $url"
 	done
 fi
 
