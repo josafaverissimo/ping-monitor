@@ -317,6 +317,8 @@ function doPing() {
 	declare -A tput_line_position_array
 	local line_counter=0
 
+	tput civis
+
 	for url in $urls; do
 		file_ping_data=$(getWordsAndNumbers "$url")
 
@@ -340,7 +342,9 @@ function doPing() {
 			icmp_seq=${icmp_seq_array["$file_ping_data"]}
 			ms_sum=${ms_sum_array["$file_ping_data"]}
 
-			grep -E "^.*seq=$icmp_seq" "./.temp_$file_ping_data" | grep -q "time"
+			grep -E "^.*seq=$icmp_seq" "./.temp_$file_ping_data" \
+				| grep -q "time"
+
 			there_isnt_time=$?
 
 			[[ $there_isnt_time -eq 0 ]] && ms=$(grep -E \
@@ -389,7 +393,7 @@ function doPing() {
 			break
 		fi
 	done
-	
+	tput cnorm	
 }
 
 function screen() {
@@ -446,10 +450,6 @@ if [[ -n "$*" ]]; then
 fi
 
 tput clear
-tput civis
-
 screen
-
 tput clear
-tput cnorm
 # --------------------------------------------------------
