@@ -302,10 +302,17 @@ function killProccess() {
 }
 
 function doPing() {
-	# empty parameters?
-	[[ -z "$*" ]] && exit $NO_URLS_EXIT_CODE	
+	local urls="$(cat $HOSTS_FILE | tr '\n' ' ')"
 
-	local urls=$*
+	if [[ -z "$*" ]]; then
+		for url in $*; do
+			grep -q "$url" <<< $urls
+			[[ $? -ne 0 ]] && urls="$urls $url"
+		done
+	fi
+
+	[[ -z "$urls" ]] && exit $NO_URLS_EXIT_CODE
+
 	local input=""
 	local stop_flag="q"
 	local quit_message="> q to quit"
@@ -426,9 +433,6 @@ function screen() {
 #
 # Execution ----------------------------------------------
 
-[[ -f "./$HOSTS_FILE" ]] && URLS=$(cat $HOSTS_FILE | tr "\n" " ")
-
-# Isnt parameters empty?
 if [[ -n "$*" ]]; then
 	for url in $*; do
 		grep -E -q "^.*\-" <<< $url
