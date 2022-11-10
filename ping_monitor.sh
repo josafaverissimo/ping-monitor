@@ -304,12 +304,14 @@ function killProccess() {
 function doPing() {
 	local urls="$(cat $HOSTS_FILE | tr '\n' ' ')"
 
-	if [[ -z "$*" ]]; then
+	if [[ -n "$*" ]]; then
 		for url in $*; do
+			echo "$url" >> test.txt
 			grep -q "$url" <<< $urls
 			[[ $? -ne 0 ]] && urls="$urls $url"
 		done
 	fi
+
 
 	[[ -z "$urls" ]] && exit $NO_URLS_EXIT_CODE
 
