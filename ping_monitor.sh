@@ -189,11 +189,18 @@ function hosts_manager() {
 
 		host=$(dialog_box title="$box_title" input input_message="$input_message")
 		[[ $? -ne 0 ]] && return $?
+    
+    if [[ -n $host ]]; then 
+		  echo "$host" >> "$HOSTS_FILE"
+  		dialog_box title="Success" msgbox msgbox_text="Host created"
 
-		echo "$host" >> "$HOSTS_FILE"
+		  return $?
+    else
+      dialog_box title="Failed" msgbox msgbox_text="Host is empty!" 
 
-		dialog_box title="Success" msgbox msgbox_text="Host created"
-		return $?
+  		return $?
+    fi
+
 	}
 
 	function read_hosts() {		
